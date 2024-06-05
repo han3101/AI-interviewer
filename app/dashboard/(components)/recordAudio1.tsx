@@ -75,31 +75,33 @@ const uploadBlob = async (blob: Blob) => {
     }
   };
 
-  const uploadTranscript = async (blob: Blob, filename: string) => {
+  const uploadTranscript = async (blob: Blob, filename: string): Promise<string | null> => {
     try {
         // Prepare the form data to send the file
         const formData = new FormData();
         formData.append("file", blob, filename);  // Use the provided filename
 
         // Fetch request to the server endpoint
-        const response = await fetch('/api/upload-audio', {
-            method: 'POST',
-            body: formData, // Use formData directly
+        const response = await fetch('http://127.0.0.1:8000/interview', {
+          method: 'POST',
+          body: formData,  // Send the form data
         });
 
         // Check if the response was successful
         if (!response.ok) {
             const errorData = await response.json();
             console.error('Error uploading file:', errorData.message);
-            return;
+            return null;
         }
 
-        // If successful, log the server's response
-        const result = await response.json();
-        console.log('File uploaded successfully:', result.filePath);
-    } catch (error) {
+        // If successful, return the object URL for the uploaded file
+        const fileResponse = await response.blob();
+        const objectUrl = URL.createObjectURL(fileResponse);
+        return objectUrl;
+      } catch (error) {
         console.error('Error:', error);
-    }
+        return null;
+      }
 };
   
 
@@ -113,7 +115,7 @@ export const AudioRecorderWithVisualizer = ({
   const [isRecordingFinished, setIsRecordingFinished] =
     useState<boolean>(false);
   const [timer, setTimer] = useState<number>(0);
-  const [transcript, setTranscript] = useState<string[]>([]);
+  // const [transcript, setTranscript] = useState<string[]>([]);
   const [currentRecord, setCurrentRecord] = useState<Record>({
     id: -1,
     name: "",
@@ -204,23 +206,6 @@ export const AudioRecorderWithVisualizer = ({
             recognitionRef.current.continuous = true;
             recognitionRef.current.interimResults = true;
 
-            // Event handler for speech recognition results
-            // recognitionRef.current.onresult = (event: any) => {
-            // const { transcript } = event.results[event.results.length - 1][0];
-
-            // // Log the recognition results and update the transcript state
-            // setTranscript(transcript);
-            // };
-
-            // recognitionRef.current.onresult = (event: any) => {
-            //     for (let i = event.resultIndex; i < event.results.length; ++i) {
-            //       if (event.results[i].isFinal) {
-            //         transcriptArray.push(event.results[i][0].transcript);
-            //         setTranscript((prev) => [...prev, event.results[i][0].transcript]);
-            //       }
-            //     }
-            //   };
-
             recognitionRef.current.onresult = (event: any) => {
                 let storedTranscripts = sessionStorage.getItem('transcripts');
                 let transcripts = storedTranscripts ? JSON.parse(storedTranscripts) : [];
@@ -248,7 +233,7 @@ export const AudioRecorderWithVisualizer = ({
     }
   }
   function stopRecording() {
-    recorder.onstop = () => {
+    recorder.onstop = async () => {
       const recordBlob = new Blob(recordingChunks, {
         type: "audio/mpeg",
       });
@@ -260,24 +245,28 @@ export const AudioRecorderWithVisualizer = ({
       // Download the transcrip
       // Combine the transcripts into a single string and download it
       const storedTranscripts = sessionStorage.getItem('transcripts');
+      let audioUrl = null;
       if (storedTranscripts) {
-
         const transcripts = JSON.parse(storedTranscripts);
             const transcriptString = transcripts.join(' ');
         const transcriptBlob = new Blob([transcriptString], {
             type: "text/plain",
         });
-        downloadBlob(transcriptBlob, `Transcript_${Date.now()}.txt`);
-        // uploadTranscript(transcriptBlob, `Transcript_${Date.now()}.txt`);
+        // downloadBlob(transcriptBlob, `Transcript_${Date.now()}.txt`);
+        audioUrl = await uploadTranscript(transcriptBlob, `Transcript_${Date.now()}.txt`);
       }
 
-      setCurrentRecord({
-        ...currentRecord,
-        file: window.URL.createObjectURL(recordBlob),
-      });
+      // setCurrentRecord({
+      //   ...currentRecord,
+      //   file: window.URL.createObjectURL(recordBlob),
+      // });
       recordingChunks = [];
       sessionStorage.removeItem('transcripts');
-      // setTranscript([]);
+
+      if (audioUrl) {
+        const audio = new Audio(audioUrl);
+        audio.play();
+      }
     };
 
     recorder.stop();
@@ -288,6 +277,7 @@ export const AudioRecorderWithVisualizer = ({
     setTimer(0);
     clearTimeout(timerTimeout);
   }
+
   function resetRecording() {
     const { mediaRecorder, stream, analyser, audioContext } =
       mediaRecorderRef.current;
@@ -330,12 +320,6 @@ export const AudioRecorderWithVisualizer = ({
       }
     }
   }
-
-  // Stop speech recognition if active
-  // if (recognitionRef.current) {
-  //   recognitionRef.current.stop();
-  // }
-//   setTranscript('');
 
 
   const handleSubmit = () => {

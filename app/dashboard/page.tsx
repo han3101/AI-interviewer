@@ -12,7 +12,7 @@ const DashboardPage = () => {
   return (
     <div className="container relative flex-1 flex flex-col justify-center items-center min-h-screen">
       <PageHeader>
-        <PageHeaderHeading>Start your Interview</PageHeaderHeading>
+        <PageHeaderHeading>Please pause for about 2 seconds before sending your recording</PageHeaderHeading>
         <AudioRecorderWithVisualizer className="my-12 w-full max-w-full" />
         <PageHeaderDescription>
           Hi I am Katy your virtual AI Interviewer, please click the microphone button to start recording your answer.
