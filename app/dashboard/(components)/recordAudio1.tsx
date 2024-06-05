@@ -239,7 +239,7 @@ export const AudioRecorderWithVisualizer = ({
       });
 
       // Downoload the audio file
-      downloadBlob(recordBlob, `Audio_${Date.now()}.mp3`);
+      // downloadBlob(recordBlob, `Audio_${Date.now()}.mp3`);
         // uploadBlob(recordBlob);
 
       // Download the transcrip
