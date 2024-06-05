@@ -5,16 +5,10 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
 import {
-  PageActions,
-  PageHeader,
-} from "@/components/ui/page";
-
-import {
   Table,
   TableBody,
   TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -54,7 +48,7 @@ const RecordingPage = () => {
           <TableHead className="w-[100px]">Timestamp</TableHead>
           <TableHead>Transcript</TableHead>
           <TableHead>Your Audio</TableHead>
-          <TableHead className="">Interviewer&aposs Response</TableHead>
+          <TableHead className="">Interviewer&apos;s Response</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

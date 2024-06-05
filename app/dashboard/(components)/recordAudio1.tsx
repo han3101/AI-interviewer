@@ -40,16 +40,6 @@ const padWithLeadingZeros = (num: number, length: number): string => {
   return String(num).padStart(length, "0");
 };
 
-// Utility function to download a blob
-// const downloadBlob = (blob: Blob, filename: string) => {
-//   const downloadLink = document.createElement("a");
-//   downloadLink.href = URL.createObjectURL(blob);
-//   downloadLink.download = filename;
-//   document.body.appendChild(downloadLink);
-//   downloadLink.click();
-//   document.body.removeChild(downloadLink);
-// };
-
 // Download the blob as a file 
 // TODO move upload to s3 storage
 const uploadBlob = async (blob: Blob, filename: string) => {
@@ -266,10 +256,6 @@ export const AudioRecorderWithVisualizer = ({
         audioUrl = await uploadTranscript(transcriptBlob, `Transcript_${timecheck}.txt`);
       }
 
-      // setCurrentRecord({
-      //   ...currentRecord,
-      //   file: window.URL.createObjectURL(recordBlob),
-      // });
       recordingChunks = [];
       sessionStorage.removeItem('transcripts');
 
