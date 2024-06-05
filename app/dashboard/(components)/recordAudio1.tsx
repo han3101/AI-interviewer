@@ -82,15 +82,15 @@ const uploadBlob = async (blob: Blob) => {
         formData.append("file", blob, filename);  // Use the provided filename
 
         // Fetch request to the server endpoint
-        const response = await fetch('http://127.0.0.1:8000/interview', {
-          method: 'POST',
-          body: formData,  // Send the form data
-        });
-
-        // const response = await fetch('http://57.151.81.81/interview', {
+        // const response = await fetch('http://127.0.0.1:8080/interview', {
         //   method: 'POST',
         //   body: formData,  // Send the form data
         // });
+
+        const response = await fetch('http://20.9.136.70:8080/interview', {
+          method: 'POST',
+          body: formData,  // Send the form data
+        });
 
         // Check if the response was successful
         if (!response.ok) {
@@ -278,16 +278,13 @@ export const AudioRecorderWithVisualizer = ({
           audio.currentTime = 0;
         };
 
-        document.querySelectorAll('button').forEach(button => {
-          button.addEventListener('click', stopAudio, { once: true });
-        });
+        document.body.addEventListener('click', stopAudio);
 
-        // Clean up the event listeners when the audio ends
+        // Clean up the event listener when the audio ends
         audio.onended = () => {
-          document.querySelectorAll('button').forEach(button => {
-            button.removeEventListener('click', stopAudio);
-          });
+          document.body.removeEventListener('click', stopAudio);
         };
+
       }
     };
 
