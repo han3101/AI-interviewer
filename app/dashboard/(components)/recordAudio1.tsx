@@ -74,6 +74,33 @@ const uploadBlob = async (blob: Blob) => {
       console.error('Error:', error);
     }
   };
+
+  const uploadTranscript = async (blob: Blob, filename: string) => {
+    try {
+        // Prepare the form data to send the file
+        const formData = new FormData();
+        formData.append("file", blob, filename);  // Use the provided filename
+
+        // Fetch request to the server endpoint
+        const response = await fetch('/api/upload-audio', {
+            method: 'POST',
+            body: formData, // Use formData directly
+        });
+
+        // Check if the response was successful
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Error uploading file:', errorData.message);
+            return;
+        }
+
+        // If successful, log the server's response
+        const result = await response.json();
+        console.log('File uploaded successfully:', result.filePath);
+    } catch (error) {
+        console.error('Error:', error);
+    }
+};
   
 
 export const AudioRecorderWithVisualizer = ({
@@ -86,7 +113,7 @@ export const AudioRecorderWithVisualizer = ({
   const [isRecordingFinished, setIsRecordingFinished] =
     useState<boolean>(false);
   const [timer, setTimer] = useState<number>(0);
-  const [transcript, setTranscript] = useState<string>("");
+  const [transcript, setTranscript] = useState<string[]>([]);
   const [currentRecord, setCurrentRecord] = useState<Record>({
     id: -1,
     name: "",
@@ -178,12 +205,12 @@ export const AudioRecorderWithVisualizer = ({
             recognitionRef.current.interimResults = true;
 
             // Event handler for speech recognition results
-            recognitionRef.current.onresult = (event: any) => {
-            const { transcript } = event.results[event.results.length - 1][0];
+            // recognitionRef.current.onresult = (event: any) => {
+            // const { transcript } = event.results[event.results.length - 1][0];
 
-            // Log the recognition results and update the transcript state
-            setTranscript(transcript);
-            };
+            // // Log the recognition results and update the transcript state
+            // setTranscript(transcript);
+            // };
 
             // recognitionRef.current.onresult = (event: any) => {
             //     for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -193,6 +220,20 @@ export const AudioRecorderWithVisualizer = ({
             //       }
             //     }
             //   };
+
+            recognitionRef.current.onresult = (event: any) => {
+                let storedTranscripts = sessionStorage.getItem('transcripts');
+                let transcripts = storedTranscripts ? JSON.parse(storedTranscripts) : [];
+            
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        transcripts.push(event.results[i][0].transcript);
+                    }
+                }
+    
+            
+                sessionStorage.setItem('transcripts', JSON.stringify(transcripts));
+            };
 
             // Start the speech recognition
             recognitionRef.current.start();
@@ -209,28 +250,38 @@ export const AudioRecorderWithVisualizer = ({
   function stopRecording() {
     recorder.onstop = () => {
       const recordBlob = new Blob(recordingChunks, {
-        type: "audio/wav",
+        type: "audio/mpeg",
       });
 
       // Downoload the audio file
-      downloadBlob(recordBlob, `Audio_${Date.now()}.wav`);
+      downloadBlob(recordBlob, `Audio_${Date.now()}.mp3`);
         // uploadBlob(recordBlob);
 
-      // Download the transcript
-        const transcriptBlob = new Blob([transcript], {
+      // Download the transcrip
+      // Combine the transcripts into a single string and download it
+      const storedTranscripts = sessionStorage.getItem('transcripts');
+      if (storedTranscripts) {
+
+        const transcripts = JSON.parse(storedTranscripts);
+            const transcriptString = transcripts.join(' ');
+        const transcriptBlob = new Blob([transcriptString], {
             type: "text/plain",
         });
         downloadBlob(transcriptBlob, `Transcript_${Date.now()}.txt`);
+        // uploadTranscript(transcriptBlob, `Transcript_${Date.now()}.txt`);
+      }
 
       setCurrentRecord({
         ...currentRecord,
         file: window.URL.createObjectURL(recordBlob),
       });
       recordingChunks = [];
-      setTranscript("");
+      sessionStorage.removeItem('transcripts');
+      // setTranscript([]);
     };
 
     recorder.stop();
+    recognitionRef.current.stop();
 
     setIsRecording(false);
     setIsRecordingFinished(true);
@@ -244,8 +295,10 @@ export const AudioRecorderWithVisualizer = ({
     if (mediaRecorder) {
       mediaRecorder.onstop = () => {
         recordingChunks = [];
+        sessionStorage.removeItem('transcripts');
       };
       mediaRecorder.stop();
+      recognitionRef.current.stop();
     } else {
       alert("recorder instance is null!");
     }
@@ -279,9 +332,9 @@ export const AudioRecorderWithVisualizer = ({
   }
 
   // Stop speech recognition if active
-//   if (recognitionRef.current) {
-//     recognitionRef.current.stop();
-//   }
+  // if (recognitionRef.current) {
+  //   recognitionRef.current.stop();
+  // }
 //   setTranscript('');
 
 

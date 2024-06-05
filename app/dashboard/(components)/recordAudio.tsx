@@ -1,141 +1,179 @@
 "use client";
 
-// Import necessary modules and components
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect, useRef } from 'react';
 
-// Declare a global interface to add the webkitSpeechRecognition property to the Window object
-declare global {
-  interface Window {
-    webkitSpeechRecognition: any;
-  }
-}
+import { default as languageCodesData } from '@/data/language-codes.json';
+import { default as countryCodesData } from '@/data/country-codes.json';
 
-// Export the MicrophoneComponent function component
-export default function MicrophoneComponent() {
-  // State variables to manage recording status, completion, and transcript
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingComplete, setRecordingComplete] = useState(false);
-  const [transcript, setTranscript] = useState("");
+const languageCodes: Record<string, string> = languageCodesData;
+const countryCodes: Record<string, string> = countryCodesData;
 
-  // Reference to store the SpeechRecognition instance
-  const recognitionRef = useRef<any>(null);
+const Translator = () => {
+  const recognitionRef = useRef<SpeechRecognition>();
 
-  // Function to start recording
-  const startRecording = () => {
-    setIsRecording(true);
-    // Create a new SpeechRecognition instance and configure it
-    recognitionRef.current = new window.webkitSpeechRecognition();
-    recognitionRef.current.continuous = true;
-    recognitionRef.current.interimResults = true;
+  const [isActive, setIsActive] = useState<boolean>(false);
+  const [text, setText] = useState<string>();
+  const [translation, setTranslation] = useState<string>();
+  const [voices, setVoices] = useState<Array<SpeechSynthesisVoice>>();
+  const [language, setLanguage] = useState<string>('pt-BR');
 
-    // Event handler for speech recognition results
-    recognitionRef.current.onresult = (event: any) => {
-      const { transcript } = event.results[event.results.length - 1][0];
+  const isSpeechDetected = false;
 
-      // Log the recognition results and update the transcript state
-      console.log(event.results);
-      setTranscript(transcript);
-    };
-
-    // Start the speech recognition
-    recognitionRef.current.start();
-  };
-
-  // Cleanup effect when the component unmounts
-  useEffect(() => {
-    return () => {
-      // Stop the speech recognition if it's active
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+  const availableLanguages = Array.from(new Set(voices?.map(({ lang }) => lang)))
+    .map(lang => {
+      const split = lang.split('-');
+      const languageCode: string = split[0];
+      const countryCode: string = split[1];
+      return {
+        lang,
+        label: languageCodes[languageCode] || lang,
+        dialect: countryCodes[countryCode]
       }
-    };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label));
+  const activeLanguage = availableLanguages.find(({ lang }) => language === lang);
+
+  const availableVoices = voices?.filter(({ lang }) => lang === language);
+  const activeVoice =
+    availableVoices?.find(({ name }) => name.includes('Google'))
+    || availableVoices?.find(({ name }) => name.includes('Luciana'))
+    || availableVoices?.[0];
+
+  useEffect(() => {
+    const voices = window.speechSynthesis.getVoices();
+    if ( Array.isArray(voices) && voices.length > 0 ) {
+      setVoices(voices);
+      return;
+    }
+    if ( 'onvoiceschanged' in window.speechSynthesis ) {
+      window.speechSynthesis.onvoiceschanged = function() {
+        const voices = window.speechSynthesis.getVoices();
+        setVoices(voices);
+      }
+    }
   }, []);
 
-  // Function to stop recording
-  const stopRecording = () => {
-    if (recognitionRef.current) {
-      // Stop the speech recognition and mark recording as complete
-      recognitionRef.current.stop();
-      setRecordingComplete(true);
+  function handleOnRecord() {
+    if ( isActive ) {
+      recognitionRef.current?.stop();
+      setIsActive(false);
+      return;
     }
-  };
 
-  // Toggle recording state and manage recording actions
-  const handleToggleRecording = () => {
-    setIsRecording(!isRecording);
-    if (!isRecording) {
-      startRecording();
-    } else {
-      stopRecording();
+    speak(' ');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+
+    recognitionRef.current.onstart = function() {
+      setIsActive(true);
     }
-  };
 
-  // Render the microphone component with appropriate UI based on recording state
+    recognitionRef.current.onend = function() {
+      setIsActive(false);
+    }
+
+    recognitionRef.current.onresult = async function(event) {
+      const transcript = event.results[0][0].transcript;
+
+      setText(transcript);
+
+      const results = await fetch('/api/translate', {
+        method: 'POST',
+        body: JSON.stringify({
+          text: transcript,
+          language: 'pt-BR'
+        })
+      }).then(r => r.json());
+
+      setTranslation(results.text);
+
+      speak(results.text);
+    }
+
+    recognitionRef.current.start();
+  }
+
+  function speak(text: string) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    if ( activeVoice ) {
+      utterance.voice = activeVoice;
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
   return (
-    <div className="flex items-center justify-center h-screen w-full">
-      <div className="w-full">
-        {(isRecording || transcript) && (
-          <div className="w-1/4 m-auto rounded-md border p-4 bg-white">
-            <div className="flex-1 flex w-full justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {recordingComplete ? "Recorded" : "Recording"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {recordingComplete
-                    ? "Thanks for talking."
-                    : "Start speaking..."}
-                </p>
-              </div>
-              {isRecording && (
-                <div className="rounded-full w-4 h-4 bg-red-400 animate-pulse" />
-              )}
-            </div>
+    <div className="mt-12 px-4">
 
-            {transcript && (
-              <div className="border rounded-md p-2 h-fullm mt-4">
-                <p className="mb-0">{transcript}</p>
-              </div>
-            )}
+      <div className="max-w-lg rounded-xl overflow-hidden mx-auto">
+        <div className="bg-zinc-200 p-4 border-b-4 border-zinc-300">
+          <div className="bg-blue-200 rounded-lg p-2 border-2 border-blue-300">
+            <ul className="font-mono font-bold text-blue-900 uppercase px-4 py-2 border border-blue-800 rounded">
+              <li>
+                &gt; Translation Mode: { activeLanguage?.label }
+              </li>
+              <li>
+                &gt; Dialect: { activeLanguage?.dialect }
+              </li>
+            </ul>
           </div>
-        )}
+        </div>
 
-        <div className="flex items-center w-full">
-          {isRecording ? (
-            // Button for stopping recording
-            <button
-              onClick={handleToggleRecording}
-              className="mt-10 m-auto flex items-center justify-center bg-red-400 hover:bg-red-500 rounded-full w-20 h-20 focus:outline-none"
-            >
-              <svg
-                className="h-12 w-12 "
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+        <div className="bg-zinc-800 p-4 border-b-4 border-zinc-950">
+          <p className="flex items-center gap-3">
+            <span className={`block rounded-full w-5 h-5 flex-shrink-0 flex-grow-0 ${isActive ? 'bg-red-500' : 'bg-red-900'} `}>
+              <span className="sr-only">{ isActive ? 'Actively recording' : 'Not actively recording' }</span>
+            </span>
+            <span className={`block rounded w-full h-5 flex-grow-1 ${isSpeechDetected ? 'bg-green-500' : 'bg-green-900'}`}>
+              <span className="sr-only">{ isSpeechDetected ? 'Speech is being recorded' : 'Speech is not being recorded' }</span>
+            </span>
+          </p>
+        </div>
+
+        <div className="bg-zinc-800 p-4">
+          <div className="grid sm:grid-cols-2 gap-4 max-w-lg bg-zinc-200 rounded-lg p-5 mx-auto">
+            <form>
+              <div>
+                <label className="block text-zinc-500 text-[.6rem] uppercase font-bold mb-1">Language</label>
+                <select className="w-full text-[.7rem] rounded-sm border-zinc-300 px-2 py-1 pr-7" name="language" value={language} onChange={(event) => {
+                  setLanguage(event.currentTarget.value);
+                }}>
+                  {availableLanguages.map(({ lang, label }) => {
+                    return (
+                      <option key={lang} value={lang}>
+                        { label } ({ lang })
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+            </form>
+            <p>
+              <button
+                className={`w-full h-full uppercase font-semibold text-sm  ${isActive ? 'text-white bg-red-500' : 'text-zinc-400 bg-zinc-900'} color-white py-3 rounded-sm`}
+                onClick={handleOnRecord}
               >
-                <path fill="white" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-              </svg>
-            </button>
-          ) : (
-            // Button for starting recording
-            <button
-              onClick={handleToggleRecording}
-              className="mt-10 m-auto flex items-center justify-center bg-blue-400 hover:bg-blue-500 rounded-full w-20 h-20 focus:outline-none"
-            >
-              <svg
-                viewBox="0 0 256 256"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-12 h-12 text-white"
-              >
-                <path
-                  fill="currentColor" // Change fill color to the desired color
-                  d="M128 176a48.05 48.05 0 0 0 48-48V64a48 48 0 0 0-96 0v64a48.05 48.05 0 0 0 48 48ZM96 64a32 32 0 0 1 64 0v64a32 32 0 0 1-64 0Zm40 143.6V232a8 8 0 0 1-16 0v-24.4A80.11 80.11 0 0 1 48 128a8 8 0 0 1 16 0a64 64 0 0 0 128 0a8 8 0 0 1 16 0a80.11 80.11 0 0 1-72 79.6Z"
-                />
-              </svg>
-              <span className="text-white font-semibold">Start Interview</span>
-            </button>
-          )}
+                { isActive ? 'Stop' : 'Record' }
+              </button>
+            </p>
+          </div>
         </div>
       </div>
+
+
+      <div className="max-w-lg mx-auto mt-12">
+        <p className="mb-4">
+          Spoken Text: { text }
+        </p>
+        <p>
+          Translation: { translation }
+        </p>
+      </div>
+
     </div>
-  );
+  )
 }
+
+export default Translator;
