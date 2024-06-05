@@ -48,7 +48,7 @@ A Walk Through of the app, head to [`Han's Interview Bot`](https://apriora-sprin
 
 
 **What I would have done with more time resources**
-1. To Lower Latency, would both
+1. To Lower Latency, current latency goes between 2.5-4s which is livable but noticeable:
     * Move to streaming inputs and outputs through websockets
     * Use a lower latency model or work to improve model through RAG or better tuning
     * Explore other options for storing and transporting big files such as supabase or Message Queues
