@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button } from "@/components/ui/button";
-import EndInterviewButton from "@/app/dashboard/(components)/EndInterviewButton";
+import EndInterviewButton from "@/components/EndInterviewButton";
 import { AudioRecorderWithVisualizer } from "@/app/dashboard/(components)/recordAudio1";
 import {
     PageActions,
@@ -16,9 +16,6 @@ const DashboardPage = () => {
         <PageHeaderHeading>Please pause for about 2 seconds before sending your recording</PageHeaderHeading>
         <AudioRecorderWithVisualizer className="my-12 w-full max-w-full" />
         <PageActions>
-          {/* <Button className='hover:bg-red-800' onClick={endRecording}>
-            End Interview
-          </Button> */}
           <EndInterviewButton />
         </PageActions>
         <PageHeaderDescription>

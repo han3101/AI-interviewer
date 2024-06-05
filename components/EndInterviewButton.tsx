@@ -1,12 +1,13 @@
 "use client";
 
-import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 const EndInterviewButton = () => {
   const [isClicked, setIsClicked] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const router = useRouter(); // Initialize the router
 
   const handleClick = async () => {
     setIsClicked(true); // Update the state first
@@ -20,17 +21,18 @@ const EndInterviewButton = () => {
     if (audioUrl) {
       const audio = new Audio(audioUrl);
       audio.play();
+      audio.onended = () => {
+        router.push('/dashboard/recording'); // Redirect after audio ends
+      };
     }
-  }, [audioUrl]); // Play the audio when the audioUrl state updates
+  }, [audioUrl, router]); // Play the audio and redirect when the audioUrl state updates
 
   return (
     <div>
       {isClicked ? (
-        <Link href="/dashboard/recording" passHref>
-          <Button className="hover:text-gray-200 dark:text-gray-400">
-            Recording Ended, click to go to Recording
-          </Button>
-        </Link>
+        <p className="text-gray-900 dark:text-gray-400">
+          Interview ended, taking you to recordings page
+        </p>
       ) : (
         <Button
           className="hover:bg-red-800 text-white"
