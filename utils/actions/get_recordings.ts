@@ -1,5 +1,9 @@
 'use server';
 
+
+// We want to obtain the Timestamp, audio, response, and transcript fields from the FastAPI endpoint
+// in a nice format which we can plug straight into the table component in the dashboard/recording page.
+
 interface FileLinks {
     audio?: string;
     response?: string;
