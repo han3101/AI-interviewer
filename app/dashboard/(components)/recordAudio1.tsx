@@ -263,7 +263,7 @@ export const AudioRecorderWithVisualizer = ({
         const transcriptBlob = new Blob([transcriptString], {
             type: "text/plain",
         });
-        // audioUrl = await uploadTranscript(transcriptBlob, `Transcript_${timecheck}.txt`);
+        audioUrl = await uploadTranscript(transcriptBlob, `Transcript_${timecheck}.txt`);
       }
 
       // setCurrentRecord({
