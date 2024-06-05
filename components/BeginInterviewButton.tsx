@@ -32,13 +32,13 @@ const BeginInterviewButton = () => {
 
 const startInterviewer = async (): Promise<string | null> => {
     try {
-    //   const response = await fetch('http://127.0.0.1:8080/begin', {
-    //     method: 'POST',
-    //   });
-  
-      const response = await fetch('https://apriora-python.onrender.com/begin', {
+      const response = await fetch('http://127.0.0.1:8080/begin', {
         method: 'POST',
       });
+  
+    //   const response = await fetch('https://apriora-python.onrender.com/begin', {
+    //     method: 'POST',
+    //   });
   
       if (!response.ok) {
         const errorData = await response.json();

@@ -50,30 +50,28 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 // Download the blob as a file 
 // TODO move upload to s3 storage
-const uploadBlob = async (blob: Blob) => {
-    const tempUrl = URL.createObjectURL(blob);
-  
-    try {
-      const response = await fetch('/api/upload-audio', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fileUrl: tempUrl }),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error uploading file:', errorData.message);
-        return;
-      }
-  
-      const result = await response.json();
-      console.log('File uploaded successfully:', result.filePath);
-    } catch (error) {
-      console.error('Error:', error);
+const uploadBlob = async (blob: Blob, filename: string) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", blob, filename);
+
+    const response = await fetch('http://127.0.0.1:8080/upload-audio', {
+      method: 'POST',
+      body: formData, // FormData will be sent correctly with 'multipart/form-data'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error uploading file:', errorData.message);
+      return;
     }
-  };
+
+    const result = await response.json();
+    console.log('File uploaded successfully:', result.filePath);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
 
   const uploadTranscript = async (blob: Blob, filename: string): Promise<string | null> => {
     try {
@@ -82,15 +80,15 @@ const uploadBlob = async (blob: Blob) => {
         formData.append("file", blob, filename);  // Use the provided filename
 
         // Fetch request to the server endpoint
-        // const response = await fetch('http://127.0.0.1:8080/interview', {
-        //   method: 'POST',
-        //   body: formData,  // Send the form data
-        // });
-
-        const response = await fetch('https://apriora-python.onrender.com/interview', {
+        const response = await fetch('http://127.0.0.1:8080/interview', {
           method: 'POST',
           body: formData,  // Send the form data
         });
+
+        // const response = await fetch('https://apriora-python.onrender.com/interview', {
+        //   method: 'POST',
+        //   body: formData,  // Send the form data
+        // });
 
         // Check if the response was successful
         if (!response.ok) {
@@ -182,13 +180,15 @@ export const AudioRecorderWithVisualizer = ({
             audioContext: audioCtx,
           };
 
-          const mimeType = MediaRecorder.isTypeSupported("audio/mpeg")
-            ? "audio/mpeg"
-            : MediaRecorder.isTypeSupported("audio/webm")
-            ? "audio/webm"
-            : "audio/wav";
+          // const mimeType = MediaRecorder.isTypeSupported("audio/mpeg")
+          //   ? "audio/mpeg"
+          //   : MediaRecorder.isTypeSupported("audio/webm")
+          //   ? "audio/webm"
+          //   : "audio/wav";
 
-          const options = { mimeType };
+          // WebM is the only supported format in Chrome and most browsers
+          // const options = { mimeType };
+          const options = { mimeType: "audio/webm" };
           mediaRecorderRef.current.mediaRecorder = new MediaRecorder(
             stream,
             options
@@ -240,12 +240,12 @@ export const AudioRecorderWithVisualizer = ({
   function stopRecording() {
     recorder.onstop = async () => {
       const recordBlob = new Blob(recordingChunks, {
-        type: "audio/mpeg",
+        type: "audio/webm",
       });
 
       // Downoload the audio file
-      // downloadBlob(recordBlob, `Audio_${Date.now()}.mp3`);
-        // uploadBlob(recordBlob);
+      // downloadBlob(recordBlob, `Audio_${Date.now()}.WebM`);
+      uploadBlob(recordBlob, `Audio_${Date.now()}.WebM`);
 
       // Download the transcrip
       // Combine the transcripts into a single string and download it
@@ -257,8 +257,7 @@ export const AudioRecorderWithVisualizer = ({
         const transcriptBlob = new Blob([transcriptString], {
             type: "text/plain",
         });
-        // downloadBlob(transcriptBlob, `Transcript_${Date.now()}.txt`);
-        audioUrl = await uploadTranscript(transcriptBlob, `Transcript_${Date.now()}.txt`);
+        // audioUrl = await uploadTranscript(transcriptBlob, `Transcript_${Date.now()}.txt`);
       }
 
       // setCurrentRecord({
