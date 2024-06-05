@@ -10,6 +10,7 @@ const BeginInterviewButton = () => {
     const handleClick = async () => {
         const url = await startInterviewer();
         if (url) {
+          await deleteInterview();
           setAudioUrl(url);
           router.push('/dashboard'); // Route to /dashboard
         }
@@ -32,13 +33,13 @@ const BeginInterviewButton = () => {
 
 const startInterviewer = async (): Promise<string | null> => {
     try {
-      const response = await fetch('http://127.0.0.1:8080/begin', {
+      // const response = await fetch('http://127.0.0.1:8080/begin', {
+      //   method: 'POST',
+      // });
+  
+      const response = await fetch('https://apriora-python.onrender.com/begin', {
         method: 'POST',
       });
-  
-    //   const response = await fetch('https://apriora-python.onrender.com/begin', {
-    //     method: 'POST',
-    //   });
   
       if (!response.ok) {
         const errorData = await response.json();
@@ -52,6 +53,23 @@ const startInterviewer = async (): Promise<string | null> => {
     } catch (error) {
       console.error('Error:', error);
       return null;
+    }
+  };
+
+  const deleteInterview = async (): Promise<void> => {
+    try {
+      const endpointUrl = 'https://apriora-python.onrender.com/delete_interview';
+      // const endpointUrl = 'http://127.0.0.1:8080/delete_interview';
+      const response = await fetch(endpointUrl, {
+        method: 'DELETE', 
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error deleting interview:', errorData.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
     }
   };
 

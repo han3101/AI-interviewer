@@ -1,15 +1,17 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Send, Mic, Trash } from "lucide-react";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import { Send, Mic, Trash } from "lucide-react";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
 
 type Props = {
   className?: string;
@@ -39,14 +41,14 @@ const padWithLeadingZeros = (num: number, length: number): string => {
 };
 
 // Utility function to download a blob
-const downloadBlob = (blob: Blob, filename: string) => {
-  const downloadLink = document.createElement("a");
-  downloadLink.href = URL.createObjectURL(blob);
-  downloadLink.download = filename;
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
-  document.body.removeChild(downloadLink);
-};
+// const downloadBlob = (blob: Blob, filename: string) => {
+//   const downloadLink = document.createElement("a");
+//   downloadLink.href = URL.createObjectURL(blob);
+//   downloadLink.download = filename;
+//   document.body.appendChild(downloadLink);
+//   downloadLink.click();
+//   document.body.removeChild(downloadLink);
+// };
 
 // Download the blob as a file 
 // TODO move upload to s3 storage
@@ -55,7 +57,9 @@ const uploadBlob = async (blob: Blob, filename: string) => {
     const formData = new FormData();
     formData.append("file", blob, filename);
 
-    const response = await fetch('http://127.0.0.1:8080/upload-audio', {
+    const endpointUrl = 'https://apriora-python.onrender.com/upload-audio';
+    // const endpointUrl = 'http://127.0.0.1:8080/upload-audio';
+    const response = await fetch(endpointUrl, {
       method: 'POST',
       body: formData, // FormData will be sent correctly with 'multipart/form-data'
     });
@@ -80,15 +84,15 @@ const uploadBlob = async (blob: Blob, filename: string) => {
         formData.append("file", blob, filename);  // Use the provided filename
 
         // Fetch request to the server endpoint
-        const response = await fetch('http://127.0.0.1:8080/interview', {
-          method: 'POST',
-          body: formData,  // Send the form data
-        });
-
-        // const response = await fetch('https://apriora-python.onrender.com/interview', {
+        // const response = await fetch('http://127.0.0.1:8080/interview', {
         //   method: 'POST',
         //   body: formData,  // Send the form data
         // });
+
+        const response = await fetch('https://apriora-python.onrender.com/interview', {
+          method: 'POST',
+          body: formData,  // Send the form data
+        });
 
         // Check if the response was successful
         if (!response.ok) {
@@ -243,9 +247,11 @@ export const AudioRecorderWithVisualizer = ({
         type: "audio/webm",
       });
 
+      let timecheck = Date.now();
+
       // Downoload the audio file
       // downloadBlob(recordBlob, `Audio_${Date.now()}.WebM`);
-      uploadBlob(recordBlob, `Audio_${Date.now()}.WebM`);
+      uploadBlob(recordBlob, `Audio_${timecheck}.WebM`);
 
       // Download the transcrip
       // Combine the transcripts into a single string and download it
@@ -257,7 +263,7 @@ export const AudioRecorderWithVisualizer = ({
         const transcriptBlob = new Blob([transcriptString], {
             type: "text/plain",
         });
-        // audioUrl = await uploadTranscript(transcriptBlob, `Transcript_${Date.now()}.txt`);
+        // audioUrl = await uploadTranscript(transcriptBlob, `Transcript_${timecheck}.txt`);
       }
 
       // setCurrentRecord({

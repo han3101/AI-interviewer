@@ -47,13 +47,13 @@ const EndInterviewButton = () => {
 
 const endInterviewer = async (): Promise<string | null> => {
   try {
-    const response = await fetch('http://127.0.0.1:8080/end', {
-      method: 'POST',
-    });
-
-    // const response = await fetch('https://apriora-python.onrender.com/end', {
+    // const response = await fetch('http://127.0.0.1:8080/end', {
     //   method: 'POST',
     // });
+
+    const response = await fetch('https://apriora-python.onrender.com/end', {
+      method: 'POST',
+    });
 
     if (!response.ok) {
       const errorData = await response.json();
