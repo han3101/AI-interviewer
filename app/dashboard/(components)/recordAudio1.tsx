@@ -87,6 +87,11 @@ const uploadBlob = async (blob: Blob) => {
           body: formData,  // Send the form data
         });
 
+        // const response = await fetch('http://57.151.81.81/interview', {
+        //   method: 'POST',
+        //   body: formData,  // Send the form data
+        // });
+
         // Check if the response was successful
         if (!response.ok) {
             const errorData = await response.json();

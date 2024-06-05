@@ -51,6 +51,10 @@ const endInterviewer = async (): Promise<string | null> => {
       method: 'POST',
     });
 
+    // const response = await fetch('http://57.151.81.81:8000/end', {
+    //   method: 'POST',
+    // });
+
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Error ending interview:', errorData.message);
