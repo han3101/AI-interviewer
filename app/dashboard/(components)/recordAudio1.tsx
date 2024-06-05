@@ -87,7 +87,7 @@ const uploadBlob = async (blob: Blob) => {
         //   body: formData,  // Send the form data
         // });
 
-        const response = await fetch('http://20.9.136.70:8080/interview', {
+        const response = await fetch('https://apriora-python.onrender.com/interview', {
           method: 'POST',
           body: formData,  // Send the form data
         });

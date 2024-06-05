@@ -51,7 +51,7 @@ const endInterviewer = async (): Promise<string | null> => {
     //   method: 'POST',
     // });
 
-    const response = await fetch('http://20.9.136.70:8080/end', {
+    const response = await fetch('https://apriora-python.onrender.com/end', {
       method: 'POST',
     });
 

@@ -36,7 +36,7 @@ const startInterviewer = async (): Promise<string | null> => {
     //     method: 'POST',
     //   });
   
-      const response = await fetch('http://20.9.136.70:8080/begin', {
+      const response = await fetch('https://apriora-python.onrender.com/begin', {
         method: 'POST',
       });
   
