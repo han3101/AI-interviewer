@@ -22,7 +22,7 @@ export default function DashboardNavBar({children}: {children: React.ReactNode})
         <SheetContent side="left">
           <SheetHeader>
             <Link href="/">
-              <SheetTitle>Han's AI Interviewer</SheetTitle>
+              <SheetTitle>Han&apos;s AI Interviewer</SheetTitle>
             </Link>
           </SheetHeader>
           <div className="flex flex-col space-y-3 mt-[1rem]">
