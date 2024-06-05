@@ -271,6 +271,23 @@ export const AudioRecorderWithVisualizer = ({
       if (audioUrl) {
         const audio = new Audio(audioUrl);
         audio.play();
+
+          // Add event listener to stop audio on any button click
+        const stopAudio = () => {
+          audio.pause();
+          audio.currentTime = 0;
+        };
+
+        document.querySelectorAll('button').forEach(button => {
+          button.addEventListener('click', stopAudio, { once: true });
+        });
+
+        // Clean up the event listeners when the audio ends
+        audio.onended = () => {
+          document.querySelectorAll('button').forEach(button => {
+            button.removeEventListener('click', stopAudio);
+          });
+        };
       }
     };
 
