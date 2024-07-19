@@ -2,6 +2,24 @@ This is a [Next.js](https://nextjs.org/) project hosted at [`Han's Interview Bot
 
 This is Han's AI Interviewer
 
+To run project:
+```bash
+npm -install
+npm run build
+npm run start
+```
+Or if you are using bun
+```bash
+bun i
+bun run build
+bun start
+```
+Or if you are using pnpm
+```bash
+pnpm i
+pnpm build
+pnpm start
+
 ## Technologies Used
 
 - **Next.js**: A React framework enabling server-side rendering and static site generation for high-performance web applications.
