@@ -1,4 +1,4 @@
-This is a [Next.js](https://nextjs.org/) project hosted at [`Han's Interview Bot`](https://apriora-sprint.vercel.app/).
+This is a [Next.js](https://nextjs.org/) project running on a FastAPI python backend hosted at [`Han's Interview Bot`](https://apriora-sprint.vercel.app/).
 
 This is Han's AI Interviewer
 
