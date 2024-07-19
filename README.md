@@ -19,6 +19,7 @@ Or if you are using pnpm
 pnpm i
 pnpm build
 pnpm start
+```
 
 ## Technologies Used
 
